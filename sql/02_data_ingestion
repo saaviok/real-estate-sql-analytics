@@ -1,0 +1,30 @@
+-- =====================================================
+-- 02_data_ingestion.sql
+-- Real Estate Analytics Portfolio Project
+-- Purpose: Load real estate CSV data into PROPERTY table
+-- Author: Savio Kedari
+-- =====================================================
+
+LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/realestate.csv'
+INTO TABLE PROPERTY
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(
+  PROPERTY_ID,
+  PROPERTY_TYPE,
+  PROVINCE,
+  CITY,
+  PRICE,
+  PREVIOUS_SALE_PRICE,
+  MONTHLY_RENT_ESTIMATE,
+  SQUARE_FEET,
+  BEDROOMS,
+  BATHROOMS,
+  YEAR_BUILT,
+  LAST_SALE_DATE,
+  LISTING_STATUS
+);
+
+-- END OF PROPERTY TABLE DATA INGESTION
