@@ -1,0 +1,23 @@
+-- =====================================================
+-- 05_indexes.sql
+-- Real Estate Analytics Portfolio Project
+-- Purpose: Add indexes to PROPERTY table for analytics
+-- Author: Savio Kedari
+-- =====================================================
+
+-- Index on city for faster regional queries
+CREATE INDEX idx_city ON PROPERTY(CITY);
+
+-- Index on province
+CREATE INDEX idx_province ON PROPERTY(PROVINCE);
+
+-- Index on price for analytical queries
+CREATE INDEX idx_price ON PROPERTY(PRICE);
+
+-- Index on bedrooms + bathrooms for segmentation queries
+CREATE INDEX idx_bed_bath ON PROPERTY(BEDROOMS, BATHROOMS);
+
+-- Optional: index on last sale date for trending / dashboards
+CREATE INDEX idx_last_sale_date ON PROPERTY(LAST_SALE_DATE);
+
+-- END OF PROPERTY INDEXES
