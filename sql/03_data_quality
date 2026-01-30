@@ -1,0 +1,57 @@
+-- =====================================================
+-- 03_data_quality.sql
+-- Real Estate Analytics Portfolio Project
+-- Purpose: Validate PROPERTY table data quality
+-- Author: Savio Kedari
+-- =====================================================
+
+-- 1. Count of rows loaded
+SELECT COUNT(*) AS total_properties
+FROM PROPERTY;
+
+-- 2. Check for missing primary keys
+SELECT COUNT(*) AS missing_ids
+FROM PROPERTY
+WHERE PROPERTY_ID IS NULL;
+
+-- 3. Check for missing essential columns
+SELECT COUNT(*) AS missing_price
+FROM PROPERTY
+WHERE PRICE IS NULL;
+
+-- 4. Range checks for numeric columns
+SELECT MIN(PRICE) AS min_price, 
+MAX(PRICE) AS max_price 
+FROM PROPERTY;
+
+SELECT MIN(SQUARE_FEET) AS min_sqft, 
+MAX(SQUARE_FEET) AS max_sqft 
+FROM PROPERTY;
+
+-- 5. Distribution of listing status
+SELECT LISTING_STATUS, COUNT(*) AS count
+FROM PROPERTY
+GROUP BY LISTING_STATUS;
+
+-- 6. Bedrooms & bathrooms range
+SELECT MIN(BEDROOMS) AS min_bed, MAX(BEDROOMS) AS max_bed,
+       MIN(BATHROOMS) AS min_bath, MAX(BATHROOMS) AS max_bath
+FROM PROPERTY;
+
+-- 7. Null Check
+SELECT COUNT(*) AS NULL_COUNT
+FROM PROPERTY
+WHERE PROPERTY_TYPE IS NULL
+OR PROVINCE IS NULL
+OR CITY IS NULL
+OR PRICE IS NULL
+OR PREVIOUS_SALE_PRICE IS NULL
+OR MONTHLY_RENT_ESTIMATE IS NULL
+OR SQUARE_FEET IS NULL
+OR BEDROOMS IS NULL
+OR BATHROOMS IS NULL
+OR YEAR_BUILT IS NULL
+OR LAST_SALE_DATE IS NULL
+OR LISTING_STATUS IS NULL;
+
+-- END OF PROPERTY TABLE DATA QUALITY CHECKS
