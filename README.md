@@ -43,22 +43,24 @@ These questions parallel **risk segmentation, anomaly detection, and performance
 ---
 
 ## 📂 Project Structure
-
+```text
 real-estate-sql-analytics/
 │
 ├── README.md
 │
 ├── data/
-│ └── sample_tables.sql
+│   └── sample_tables.sql
 │
 ├── sql/
-│ ├── 01_schema.sql
-│ ├── 02_data_load.sql
-│ ├── 03_data_quality_checks.sql
-│ ├── 04_exploratory_analysis.sql
-│ ├── 05_business_metrics.sql
-│ ├── 06_analytics_queries.sql
-│ └── 07_advanced_analytics.sql
+│   ├── 01_schema.sql
+│   ├── 02_data_load.sql
+│   ├── 03_data_quality_checks.sql
+│   ├── 04_exploratory_analysis.sql
+│   ├── 05_business_metrics.sql
+│   ├── 06_analytics_queries.sql
+│   └── 07_advanced_analytics.sql
+```
+
 
 
 ---
