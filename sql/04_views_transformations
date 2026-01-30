@@ -1,0 +1,98 @@
+-- =====================================================
+-- 04_views_transformations.sql
+-- Real Estate Analytics Portfolio Project
+-- Purpose: Create multiple advanced views for analytics
+-- Author: Savio Kedari
+-- =====================================================
+
+-- 1️. Base metrics view: all key property info plus price per sqft
+CREATE OR REPLACE VIEW PROPERTY_METRICS AS
+SELECT 
+    PROPERTY_ID,
+    PROPERTY_TYPE,
+    PROVINCE,
+    CITY,
+    PRICE,
+    SQUARE_FEET,
+    ROUND(PRICE / SQUARE_FEET, 2) AS PRICE_PER_SQFT,
+    BEDROOMS,
+    BATHROOMS,
+    YEAR_BUILT,
+    LAST_SALE_DATE,
+    LISTING_STATUS
+FROM PROPERTY;
+
+-- 2️. Price category view: segment properties by price bands
+CREATE OR REPLACE VIEW PROPERTY_PRICE_CATEGORY AS
+SELECT
+    PROPERTY_ID,
+    PRICE,
+    CASE
+        WHEN PRICE < 200000 THEN 'Low'
+        WHEN PRICE BETWEEN 200000 AND 500000 THEN 'Mid'
+        ELSE 'High'
+    END AS PRICE_CATEGORY
+FROM PROPERTY
+ORDER BY PRICE DESC;
+
+-- 3️. Province summary: avg price, sqft, and price per sqft per province
+CREATE OR REPLACE VIEW PROPERTY_PROVINCE_SUMMARY AS
+SELECT
+    PROVINCE,
+    COUNT(*) AS TOTAL_PROPERTIES,
+    ROUND(AVG(PRICE), 2) AS AVG_PRICE,
+    ROUND(AVG(SQUARE_FEET), 2) AS AVG_SQFT,
+    ROUND(AVG(PRICE / SQUARE_FEET), 2) AS AVG_PRICE_PER_SQFT
+FROM PROPERTY
+GROUP BY PROVINCE
+ORDER BY PROVINCE;
+
+-- 4️. Bedrooms vs Price: avg price and price per sqft per bedroom count
+CREATE OR REPLACE VIEW PROPERTY_BEDROOM_PRICE AS
+SELECT
+    BEDROOMS,
+    COUNT(*) AS TOTAL_PROPERTIES,
+    ROUND(AVG(PRICE), 2) AS AVG_PRICE,
+    ROUND(AVG(PRICE / SQUARE_FEET), 2) AS AVG_PRICE_PER_SQFT
+FROM PROPERTY
+GROUP BY BEDROOMS
+ORDER BY BEDROOMS;
+
+-- 5️. Listing status distribution by city
+CREATE OR REPLACE VIEW PROPERTY_STATUS_CITY AS
+SELECT
+    CITY,
+    LISTING_STATUS,
+    COUNT(*) AS TOTAL_PROPERTIES
+FROM PROPERTY
+GROUP BY CITY, LISTING_STATUS
+ORDER BY CITY, LISTING_STATUS;
+
+-- 6️. Top 10 expensive properties by price per sqft
+CREATE OR REPLACE VIEW PROPERTY_TOP_PRICE_PER_SQFT AS
+SELECT 
+    PROPERTY_ID,
+    CITY,
+    PROVINCE,
+    PRICE,
+    SQUARE_FEET,
+    ROUND(PRICE / SQUARE_FEET, 2) AS PRICE_PER_SQFT
+FROM PROPERTY
+ORDER BY PRICE / SQUARE_FEET DESC
+LIMIT 10;
+
+-- 7️. Properties built in last 10 years
+CREATE OR REPLACE VIEW PROPERTY_RECENT_BUILT AS
+SELECT
+    PROPERTY_ID,
+    PROPERTY_TYPE,
+    PROVINCE,
+    CITY,
+    YEAR_BUILT,
+    PRICE,
+    SQUARE_FEET,
+    ROUND(PRICE / SQUARE_FEET, 2) AS PRICE_PER_SQFT
+FROM PROPERTY
+WHERE YEAR_BUILT >= YEAR(CURDATE()) - 10;
+
+-- END OF PROPERTY ADVANCED VIEWS
