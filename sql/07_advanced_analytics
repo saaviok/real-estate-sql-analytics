@@ -1,0 +1,69 @@
+-- =====================================================
+-- 07_advanced_analytics.sql
+-- Real Estate Analytics Portfolio Project
+-- Purpose: Advanced analytics combining performance, date insights, and anomaly detection
+-- Author: Savio Kedari
+-- =====================================================
+
+-- 1. Monthly sales trends per city
+SELECT 
+    CITY,
+    YEAR(LAST_SALE_DATE) AS SALE_YEAR,
+    MONTH(LAST_SALE_DATE) AS SALE_MONTH,
+    COUNT(*) AS TOTAL_SALES,
+    ROUND(AVG(PRICE), 2) AS AVG_PRICE
+FROM PROPERTY
+WHERE LAST_SALE_DATE IS NOT NULL
+GROUP BY CITY, SALE_YEAR, SALE_MONTH
+ORDER BY CITY, SALE_YEAR, SALE_MONTH;
+
+-- 2. Top 10 newest properties per city
+SELECT p1.PROPERTY_ID,
+       p1.CITY,
+       p1.PROPERTY_TYPE,
+       p1.PRICE,
+       p1.LAST_SALE_DATE
+FROM PROPERTY p1
+JOIN (
+    SELECT CITY, MAX(LAST_SALE_DATE) AS MAX_SALE_DATE
+    FROM PROPERTY
+    WHERE LAST_SALE_DATE IS NOT NULL
+    GROUP BY CITY
+) AS latest
+  ON p1.CITY = latest.CITY
+ AND p1.LAST_SALE_DATE = latest.MAX_SALE_DATE
+ORDER BY p1.CITY;
+
+-- 3. Price outliers (properties sold far above/below city average)
+WITH CityAvg AS (
+    SELECT CITY, AVG(PRICE) AS AVG_PRICE, STDDEV(PRICE) AS STD_PRICE
+    FROM PROPERTY
+    GROUP BY CITY
+)
+SELECT p.PROPERTY_ID, p.CITY, p.PROPERTY_TYPE, p.PRICE, c.AVG_PRICE, c.STD_PRICE,
+       CASE 
+           WHEN p.PRICE > c.AVG_PRICE + 2 * c.STD_PRICE THEN 'High Outlier'
+           WHEN p.PRICE < c.AVG_PRICE - 2 * c.STD_PRICE THEN 'Low Outlier'
+           ELSE 'Normal'
+       END AS PRICE_CATEGORY
+FROM PROPERTY p
+JOIN CityAvg c ON p.CITY = c.CITY
+ORDER BY p.CITY, PRICE_CATEGORY DESC, PRICE DESC;
+
+-- 4. Properties listed a long time since last sale (anomaly alert)
+SELECT PROPERTY_ID, CITY, PROPERTY_TYPE, PRICE, LAST_SALE_DATE,
+       DATEDIFF(CURDATE(), LAST_SALE_DATE) AS DAYS_SINCE_LAST_SALE
+FROM PROPERTY
+WHERE LAST_SALE_DATE IS NOT NULL
+  AND DATEDIFF(CURDATE(), LAST_SALE_DATE) > 365
+ORDER BY DAYS_SINCE_LAST_SALE DESC;
+
+-- 5. Listing status distribution per province
+SELECT PROVINCE, LISTING_STATUS,
+       COUNT(*) AS TOTAL_PROPERTIES,
+       ROUND(COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY PROVINCE) * 100, 2) AS PERCENT_OF_PROVINCE
+FROM PROPERTY
+GROUP BY PROVINCE, LISTING_STATUS
+ORDER BY PROVINCE, LISTING_STATUS;
+
+-- END OF ADVANCED ANALYTICS
