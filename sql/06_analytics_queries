@@ -1,0 +1,126 @@
+-- =====================================================
+-- 06_analytics_queries.sql
+-- Real Estate Analytics Portfolio Project
+-- Purpose: Advanced SQL queries for property insights and performance analysis
+-- Author: Savio Kedari
+-- =====================================================
+
+-- 1️. Rank properties by price per sqft within each city
+SELECT PROPERTY_ID, CITY, PRICE, SQUARE_FEET,
+       ROUND(PRICE / SQUARE_FEET,2) AS PRICE_PER_SQFT,
+       RANK() OVER (PARTITION BY CITY ORDER BY PRICE / SQUARE_FEET DESC) AS CITY_PRICE_RANK
+FROM PROPERTY;
+
+-- 2️. Properties priced above city average
+WITH CityAvg AS (
+    SELECT CITY, AVG(PRICE) AS AVG_PRICE
+    FROM PROPERTY
+    GROUP BY CITY
+)
+SELECT p.PROPERTY_ID, p.CITY, p.PRICE, c.AVG_PRICE
+FROM PROPERTY p
+JOIN CityAvg c ON p.CITY = c.CITY
+WHERE p.PRICE > c.AVG_PRICE;
+
+-- 3️. Divide properties into quartiles by price per sqft
+SELECT PROPERTY_ID, CITY, PRICE, SQUARE_FEET,
+       NTILE(4) OVER (ORDER BY PRICE / SQUARE_FEET DESC) AS PRICE_QUARTILE
+FROM PROPERTY;
+
+-- 4️. Properties cheaper than city average
+WITH CityAvg AS (
+    SELECT CITY, AVG(PRICE) AS AVG_PRICE
+    FROM PROPERTY
+    GROUP BY CITY
+)
+SELECT p1.PROPERTY_ID, p1.CITY, p1.PRICE, c.AVG_PRICE
+FROM PROPERTY p1
+LEFT JOIN CityAvg c ON p1.CITY = c.CITY
+WHERE p1.PRICE < c.AVG_PRICE;
+
+-- 5️ Properties priced above city average
+SELECT PROPERTY_ID, CITY, PRICE
+FROM PROPERTY p
+WHERE PRICE > (
+    SELECT AVG(PRICE)
+    FROM PROPERTY
+    WHERE CITY = p.CITY
+);
+
+-- 6️. Total properties and avg price by province and property type
+SELECT PROVINCE, PROPERTY_TYPE,
+       COUNT(*) AS TOTAL_PROPERTIES,
+       ROUND(AVG(PRICE),2) AS AVG_PRICE
+FROM PROPERTY
+GROUP BY PROVINCE, PROPERTY_TYPE WITH ROLLUP;
+
+-- 7️. Listing status by city
+SELECT CITY,
+    SUM(CASE WHEN LISTING_STATUS LIKE '%ACTIVE%' THEN 1 ELSE 0 END) AS ACTIVE,
+    SUM(CASE WHEN LISTING_STATUS LIKE '%SOLD%' THEN 1 ELSE 0 END) AS SOLD,
+    SUM(CASE WHEN LISTING_STATUS LIKE '%CONDITIONALLY SOLD%' THEN 1 ELSE 0 END) AS CONDITIONALLY_SOLD
+FROM PROPERTY
+GROUP BY CITY
+ORDER BY CITY;
+
+-- 8️. Percentage of total properties per province by status
+SELECT PROVINCE, LISTING_STATUS,
+       COUNT(*) AS TOTAL_PROPERTIES,
+       ROUND(COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY PROVINCE) * 100,2) AS PERCENT_OF_PROVINCE
+FROM PROPERTY
+GROUP BY PROVINCE, LISTING_STATUS
+ORDER BY PROVINCE, LISTING_STATUS;
+
+-- 9️. Properties with previous sale price recorded
+SELECT PROPERTY_ID, CITY, PRICE, PREVIOUS_SALE_PRICE
+FROM PROPERTY p
+WHERE EXISTS (
+    SELECT 1
+    FROM PROPERTY p2
+    WHERE p2.PROPERTY_ID = p.PROPERTY_ID
+      AND p2.PREVIOUS_SALE_PRICE IS NOT NULL
+);
+
+-- 10. Find top 10 properties by price per sqft using indexed columns
+-- (Assumes indexes on CITY, PRICE, SQUARE_FEET have been created in 05_indexes.sql)
+SELECT PROPERTY_ID, CITY, PRICE, SQUARE_FEET,
+       ROUND(PRICE / SQUARE_FEET,2) AS PRICE_PER_SQFT
+FROM PROPERTY
+ORDER BY PRICE / SQUARE_FEET DESC
+LIMIT 10;
+
+-- 11️. Advanced property listing date analytics
+-- Purpose: Demonstrates advanced date/time analysis, rolling metrics, and listing age bucketization
+
+-- 11a. Days Since Last Sale
+SELECT 
+    PROPERTY_ID,
+    CITY,
+    PROPERTY_TYPE,
+    PRICE,
+    LAST_SALE_DATE,
+    DATEDIFF(CURDATE(), LAST_SALE_DATE) AS DAYS_SINCE_LAST_SALE,
+    LISTING_STATUS AS CURRENT_LISTING_STATUS
+FROM PROPERTY
+WHERE LAST_SALE_DATE IS NOT NULL
+ORDER BY CITY, LAST_SALE_DATE DESC;
+
+
+-- 11b. Most recent sale per city
+SELECT p1.PROPERTY_ID,
+       p1.CITY,
+       p1.PROPERTY_TYPE,
+       p1.PRICE,
+       p1.LAST_SALE_DATE
+FROM PROPERTY p1
+JOIN (
+    SELECT CITY, MAX(LAST_SALE_DATE) AS MAX_SALE_DATE
+    FROM PROPERTY
+    WHERE LAST_SALE_DATE IS NOT NULL
+    GROUP BY CITY
+) AS latest
+  ON p1.CITY = latest.CITY
+ AND p1.LAST_SALE_DATE = latest.MAX_SALE_DATE
+ORDER BY p1.CITY;
+
+-- END OF Advanced SQL queries for property insights and performance analysis
